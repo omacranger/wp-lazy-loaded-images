@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WP Lazy Loaded Images
-Plugin URI: #
+Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A plugin to enable lazy-loading on all images using official WordPress functions.
 Version: 1.0
 Author: Logan Graham
@@ -10,7 +10,7 @@ License: GPL2
 */
 
 
-class Lazy_Loaded_Images {
+class WP_Lazy_Loaded_Images {
 
 	/**
 	 * Lazy_Loaded_Images constructor.
@@ -85,6 +85,7 @@ class Lazy_Loaded_Images {
 			$attr['src']       = $this->create_placeholder_image( $source[1], $source[2] );
 			$attr['class']     = ( strpos( $attr['class'], "lazy-load" ) === false ) ? $attr['class'] . " lazy-load" : $attr['class'];
 			unset( $attr['srcset'] ); // Unset srcset to prevent it from taking priority over lazy-loaded content
+            // TODO: Better support / fallback for srcset
 		}
 
 		return $attr;
@@ -116,4 +117,4 @@ class Lazy_Loaded_Images {
 }
 
 global $lazy_loaded_images;
-$lazy_loaded_images = new Lazy_Loaded_Images();
+$lazy_loaded_images = new WP_Lazy_Loaded_Images();
