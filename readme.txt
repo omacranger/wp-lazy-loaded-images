@@ -1,9 +1,9 @@
 === Plugin Name ===
 Contributors: omac
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QAQ2DENKEE&lc=US&item_name=Logan%20Graham&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
-Tags: Lazy, Loading, Images
+Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
-Tested up to: 4.2
+Tested up to: 4.6.1
 Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
