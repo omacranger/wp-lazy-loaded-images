@@ -24,7 +24,40 @@ class WP_Lazy_Loaded_Images {
 			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 			// Inline
 			add_action( 'wp_print_footer_scripts', array( $this, 'add_inline_scripts' ), 10 );
+
+			add_filter( 'the_content', array( $this, 'filter_post_content' ) );
 		}
+	}
+
+	/**
+	 * Filter the content of all posts & pages, automatically replacing images with lazy-loaded equivalents
+	 *
+	 * @param $content
+	 *
+	 * @return mixed
+	 */
+	function filter_post_content( $content ) {
+
+		if ( is_feed() ) { // Skip replacement on feeds
+			return $content;
+		}
+
+		preg_match_all( "`<img.*?/>`", $content, $matches );
+
+		if ( count( $matches[0] ) ) {
+			// Iterate through found images - replace src and whatnot
+			foreach ( $matches[0] as $match ) {
+				preg_match( '/wp-image-([0-9]+)/', $match, $id );
+				preg_match( '/size-([a-z]+)/', $match, $size );
+				if ( isset( $id[1] ) && isset( $size[1] ) ) {
+					$new_image = wp_get_attachment_image( $id[1], $size[1] );
+					$content   = str_replace( $match, $new_image, $content );
+				}
+
+			}
+		}
+
+		return $content;
 	}
 
 	/**
@@ -84,7 +117,7 @@ class WP_Lazy_Loaded_Images {
 			$source            = wp_get_attachment_image_src( $attachment->ID, $size );
 			$attr['src']       = $this->create_placeholder_image( $source[1], $source[2] );
 			$attr['class']     = ( strpos( $attr['class'], "lazy-load" ) === false ) ? $attr['class'] . " lazy-load" : $attr['class'];
-			unset( $attr['srcset'] ); // Unset srcset to prevent it from taking priority over lazy-loaded content
+			unset( $attr['srcset'], $attr['sizes'] ); // Unset srcset to prevent it from taking priority over lazy-loaded content
             // TODO: Better support / fallback for srcset
 		}
 
