@@ -36,6 +36,9 @@ You can use the `placeholder_image_color` filter to supply a custom RGB array to
 
 == Changelog ==
 
+= 1.1.1 =
+* Move script enqueue to footer
+
 = 1.1 =
 * Add support for automatically replacing images embedded inside posts and pages.
 

@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A plugin to enable lazy-loading on all images using official WordPress functions.
-Version: 1.0
+Version: 1.1.1
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -77,7 +77,7 @@ class WP_Lazy_Loaded_Images {
 	 */
 	function enqueue_scripts() {
 		if ( ! wp_style_is( 'jquery-lazyload' ) ) {
-			wp_enqueue_script( 'jquery-lazyload', $this->get_plugin_url( '/includes/js/jquery.lazyload.min.js' ), array( 'jquery' ), '1.9.7' );
+			wp_enqueue_script( 'jquery-lazyload', $this->get_plugin_url( '/includes/js/jquery.lazyload.min.js' ), array( 'jquery' ), '1.9.7', true );
 		}
 	}
 
