@@ -113,9 +113,13 @@ class WP_Lazy_Loaded_Images {
 	function modify_image_attributes( $attr, $attachment, $size ) {
 		$source = wp_prepare_attachment_for_js( $attachment->ID );
 		if ( strpos( $source['mime'], 'svg', 0 ) === false ) {
+			// Allow passing of custom placeholder color on individual image
+			$placeholder_color = ( isset( $attr['placeholder_color'] ) ) ? $attr['placeholder_color'] : false;
+			unset( $attr['placeholder_color'] );
+			
 			$attr['data-lazy'] = $attr['src'];
 			$source            = wp_get_attachment_image_src( $attachment->ID, $size );
-			$attr['src']       = $this->create_placeholder_image( $source[1], $source[2] );
+			$attr['src']       = $this->create_placeholder_image( $source[1], $source[2], $placeholder_color );
 			$attr['class']     = ( strpos( $attr['class'], "lazy-load" ) === false ) ? $attr['class'] . " lazy-load" : $attr['class'];
 			unset( $attr['srcset'], $attr['sizes'] ); // Unset srcset to prevent it from taking priority over lazy-loaded content
             // TODO: Better support / fallback for srcset
