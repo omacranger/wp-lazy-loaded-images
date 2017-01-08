@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QA
 Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
 Tested up to: 4.7.0
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,12 +62,17 @@ By default I've included a class that's added after images are loaded to assist 
 
 == Changelog ==
 
+= 1.3.0 =
+* Change `the_content` parser to a DOM parser to be a bit more accurate when replacing images, and better support for attributes (alt, title, classes)
+* Add support to disable lazy loading on a per-image basis by passing `data-no-lazy` on the image you don't want loading inside the post/page content area
+* Added a few filters for developers / users
+
 = 1.2.0 =
 * Move script enqueue to footer
 * Allow filter for custom placeholder color on a per-image basis
 
 = 1.1 =
-* Add support for automatically replacing images embedded inside posts and pages.
+* Add support for automatically replacing images embedded inside posts and pages
 
 = 1.0 =
 * Initial Release

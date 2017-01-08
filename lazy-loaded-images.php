@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A plugin to enable lazy-loading on all images using official WordPress functions.
-Version: 1.2.1
+Version: 1.3.0
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -38,26 +38,44 @@ class WP_Lazy_Loaded_Images {
 	 */
 	function filter_post_content( $content ) {
 
-		if ( is_feed() ) { // Skip replacement on feeds
+		if ( is_feed() || apply_filters( 'skip_lazy_load', false ) ) { // Skip replacement on feeds, or disable via filter
 			return $content;
 		}
 
-		preg_match_all( "`<img.*?/>`", $content, $matches );
+		$dom                      = new DOMDocument(); // Post Content
+		$new_image                = new DOMDocument(); // Replacement image parser
+		$dom->strictErrorChecking = false;
+		$dom->loadHTML( $content );
 
-		if ( count( $matches[0] ) ) {
+		$images = $dom->getElementsByTagName( 'img' );
+
+		if ( $images->length ) {
 			// Iterate through found images - replace src and whatnot
-			foreach ( $matches[0] as $match ) {
-				preg_match( '/wp-image-([0-9]+)/', $match, $id );
-				preg_match( '/size-([a-z]+)/', $match, $size );
-				if ( isset( $id[1] ) && isset( $size[1] ) ) {
-					$new_image = wp_get_attachment_image( $id[1], $size[1] );
-					$content   = str_replace( $match, $new_image, $content );
+			/* @var $image DOMElement */
+			foreach ( $images as $image ) {
+				$supported_attributes = apply_filters( 'lazy_load_image_attributes', array( 'class', 'alt', 'title' ) );
+				$attributes           = array();
+
+				foreach ( $supported_attributes as $attribute ) {
+					$attributes[ $attribute ] = $image->getAttribute( $attribute );
+				}
+
+				// Match image ID and size for dynamic image
+				preg_match( '/wp-image-([0-9]+)/', $attributes['class'], $id ); // Image ID
+				preg_match( '/size-([a-z]+)/', $attributes['class'], $size ); // Image Size
+
+				if ( isset( $id[1] ) && isset( $size[1] ) && ! $image->hasAttribute( 'data-no-lazy' ) ) {
+					$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
+					$new_image->loadHTML( $new_image_html );
+					// $content = str_replace( $dom->saveHTML( $image ), $new_image, $content );
+					$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )[0] );
+					$image->parentNode->replaceChild( $new_node, $image );
 				}
 
 			}
 		}
 
-		return $content;
+		return $dom->saveHTML();
 	}
 
 	/**
