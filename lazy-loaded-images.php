@@ -67,8 +67,7 @@ class WP_Lazy_Loaded_Images {
 				if ( isset( $id[1] ) && isset( $size[1] ) && ! $image->hasAttribute( 'data-no-lazy' ) ) {
 					$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
 					$new_image->loadHTML( $new_image_html );
-					// $content = str_replace( $dom->saveHTML( $image ), $new_image, $content );
-					$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )[0] );
+					$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
 					$image->parentNode->replaceChild( $new_node, $image );
 				}
 
