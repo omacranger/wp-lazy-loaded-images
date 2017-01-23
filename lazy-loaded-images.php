@@ -2,8 +2,8 @@
 /*
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
-Description: A plugin to enable lazy-loading on all images using official WordPress functions.
-Version: 1.3.0
+Description: A simple plugin to enable lazy-loading for images on WordPress.
+Version: 1.3.1
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -38,43 +38,55 @@ class WP_Lazy_Loaded_Images {
 	 */
 	function filter_post_content( $content ) {
 
-		if ( is_feed() || apply_filters( 'skip_lazy_load', false ) ) { // Skip replacement on feeds, or disable via filter
+		if ( is_feed() || apply_filters( 'skip_lazy_load', false ) || empty( $content ) ) { // Skip replacement on feeds, or disable via filter
 			return $content;
 		}
 
-		$dom                      = new DOMDocument(); // Post Content
-		$new_image                = new DOMDocument(); // Replacement image parser
-		$dom->strictErrorChecking = false;
-		$dom->loadHTML( $content );
+		try {
+			$dom                      = new DOMDocument(); // Post Content
+			$new_image                = new DOMDocument(); // Replacement image parser
+			$dom->strictErrorChecking = false;
+			$dom->loadHTML( $content );
 
-		$images = $dom->getElementsByTagName( 'img' );
+			$images = $dom->getElementsByTagName( 'img' );
 
-		if ( $images->length ) {
-			// Iterate through found images - replace src and whatnot
-			/* @var $image DOMElement */
-			foreach ( $images as $image ) {
-				$supported_attributes = apply_filters( 'lazy_load_image_attributes', array( 'class', 'alt', 'title' ) );
-				$attributes           = array();
+			if ( $images->length ) {
+				// Iterate through found images - replace src and whatnot
+				/* @var $image DOMElement */
+				foreach ( $images as $image ) {
+					$supported_attributes = apply_filters( 'lazy_load_image_attributes', array(
+						'class',
+						'alt',
+						'title'
+					) );
+					$attributes           = array();
 
-				foreach ( $supported_attributes as $attribute ) {
-					$attributes[ $attribute ] = $image->getAttribute( $attribute );
+					foreach ( $supported_attributes as $attribute ) {
+						$attributes[ $attribute ] = $image->getAttribute( $attribute );
+					}
+
+					// Match image ID and size for dynamic image
+					preg_match( '/wp-image-([0-9]+)/', $attributes['class'], $id ); // Image ID
+					preg_match( '/size-([a-z]+)/', $attributes['class'], $size ); // Image Size
+
+					if ( isset( $id[1] ) && isset( $size[1] ) && ! $image->hasAttribute( 'data-no-lazy' ) ) {
+						$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
+						$new_image->loadHTML( $new_image_html );
+						$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
+						$image->parentNode->replaceChild( $new_node, $image );
+					}
+
 				}
-
-				// Match image ID and size for dynamic image
-				preg_match( '/wp-image-([0-9]+)/', $attributes['class'], $id ); // Image ID
-				preg_match( '/size-([a-z]+)/', $attributes['class'], $size ); // Image Size
-
-				if ( isset( $id[1] ) && isset( $size[1] ) && ! $image->hasAttribute( 'data-no-lazy' ) ) {
-					$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
-					$new_image->loadHTML( $new_image_html );
-					$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
-					$image->parentNode->replaceChild( $new_node, $image );
-				}
-
 			}
-		}
 
-		return $dom->saveHTML();
+			return $dom->saveHTML();
+		} catch ( Exception $e ) {
+			if ( apply_filters( 'lazy_load_log_errors', false ) ) { // Set to false by default to prevent excess error logging if used on high traffic site
+				error_log( $e->getMessage() );
+			}
+
+			return $content;
+		}
 	}
 
 	/**
