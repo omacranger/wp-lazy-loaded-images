@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QA
 Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
 Tested up to: 4.7.1
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -61,6 +61,9 @@ By default I've included a class that's added after images are loaded to assist 
      }
 
 == Changelog ==
+
+= 1.3.2 =
+* Add fix for UTF encoding
 
 = 1.3.0 =
 * Change `the_content` parser to a DOM parser to be a bit more accurate when replacing images, and better support for attributes (alt, title, classes)
