@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A simple plugin to enable lazy-loading for images on WordPress.
-Version: 1.3.2
+Version: 1.4.0
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -69,18 +69,44 @@ class WP_Lazy_Loaded_Images {
 					preg_match( '/wp-image-([0-9]+)/', $attributes['class'], $id ); // Image ID
 					preg_match( '/size-([a-z]+)/', $attributes['class'], $size ); // Image Size
 
-					if ( isset( $id[1] ) && isset( $size[1] ) && ! $image->hasAttribute( 'data-no-lazy' ) ) {
-						$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
-						$new_image->loadHTML( $new_image_html );
-						$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
-						$image->parentNode->replaceChild( $new_node, $image );
-					}
+					// If they have no-lazy attribute, skip
+					if ( ! $image->hasAttribute( 'data-no-lazy' ) ) {
 
+						// If attributes are set, try to create image using native WP function, else set to false to try and parse otherwise
+						if ( isset( $id[1] ) && isset( $size[1] ) ) {
+							$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
+						} else {
+							$new_image_html = false;
+						}
+
+						if ( $new_image_html ) {
+							// If result is positive, image was created and will be output / replaced below
+							$new_image->loadHTML( $new_image_html );
+							$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
+							$image->parentNode->replaceChild( $new_node, $image );
+
+						} elseif ( $image->hasAttribute( 'width' ) && $image->hasAttribute( 'height' ) && $image->hasAttribute( 'src' ) ) {
+							// Image was not found (maybe external, or ID wasn't present), so check if has height, width, and src attributes (required for placeholder) to pre-fill and generate
+							$classes = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazy-load' : 'lazy-load';
+
+							// Manually create new image
+							$manual_image = $dom->createElement( 'img' );
+							$manual_image->setAttribute( 'width', $image->getAttribute( 'width' ) );
+							$manual_image->setAttribute( 'height', $image->getAttribute( 'height' ) );
+							$manual_image->setAttribute( 'data-lazy', $image->getAttribute( 'src' ) );
+							$manual_image->setAttribute( 'src', self::create_placeholder_image( $image->getAttribute( 'width' ), $image->getAttribute( 'height' ) ) );
+							$manual_image->setAttribute( 'class', $classes );
+
+
+							$new_node = $dom->importNode( $manual_image );
+							$image->parentNode->replaceChild( $new_node, $image );
+						}
+					}
 				}
 			}
 
 			return $dom->saveHTML();
-		} catch ( Exception $e ) {
+		} catch ( \Exception $e ) {
 			if ( apply_filters( 'lazy_load_log_errors', false ) ) { // Set to false by default to prevent excess error logging if used on high traffic site
 				error_log( $e->getMessage() );
 			}

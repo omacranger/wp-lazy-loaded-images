@@ -3,8 +3,8 @@ Contributors: omac
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QAQ2DENKEE&lc=US&item_name=Logan%20Graham&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
-Tested up to: 4.7.1
-Stable tag: 1.3.2
+Tested up to: 4.7.2
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -61,6 +61,10 @@ By default I've included a class that's added after images are loaded to assist 
      }
 
 == Changelog ==
+
+= 1.4.0 =
+* Added support for external images (or images that can't be found inside of WP install) as long as height, width, and src attributes are set
+* Bugfix to catch errors better
 
 = 1.3.2 =
 * Add fix for UTF encoding
