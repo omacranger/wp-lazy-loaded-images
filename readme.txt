@@ -60,10 +60,35 @@ By default I've included a class that's added after images are loaded to assist 
         opacity: 1;
      }
 
+= Fallback =
+
+As of 1.4.0, the plugin also adds a `noscript` fallback so the images will appear in browsers that might have Javascript disabled. To take full advantage of this, you can add a `no-js` tag to your body classes, then remove it using JS. Using this method, and the below CSS as an example, you can have the placeholders hidden when JS is disabled.
+
+Add the following CSS:
+
+     .no-js .lazy-load {
+          opacity: 0;
+     }
+
+Add the following JS, as close to the opening of your `body` tag as possible (IE10+):
+
+     <script type="text/javascript">
+          document.getElementsByTagName('body')[0].classList.remove('nojs');
+     </script>
+
+And append this snippet to your functions.php:
+
+     add_filter( 'body_class', function ( $classes, $class ) {
+     	$classes[] = 'nojs';
+
+     	return $classes;
+     } );
+
 == Changelog ==
 
 = 1.4.0 =
 * Added support for external images (or images that can't be found inside of WP install) as long as height, width, and src attributes are set
+* Add fallback image created as noscript object
 * Bugfix to catch errors better
 
 = 1.3.2 =
