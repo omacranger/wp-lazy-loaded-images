@@ -82,7 +82,7 @@ And append this snippet to your functions.php:
      	$classes[] = 'nojs';
 
      	return $classes;
-     } );
+     }, 10, 2 );
 
 == Changelog ==
 
