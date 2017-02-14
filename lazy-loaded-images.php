@@ -53,7 +53,9 @@ class WP_Lazy_Loaded_Images {
 			if ( $images->length ) {
 				// Iterate through found images - replace src and whatnot
 				/* @var $image DOMElement */
-				foreach ( $images as $image ) {
+				for( $x = 0; $x < $images->length; $x++ ) {
+					$image = $images->item($x);
+
 					$supported_attributes = apply_filters( 'lazy_load_image_attributes', array(
 						'class',
 						'alt',
@@ -71,6 +73,7 @@ class WP_Lazy_Loaded_Images {
 
 					// If they have no-lazy attribute, skip
 					if ( ! $image->hasAttribute( 'data-no-lazy' ) ) {
+						$parent = $image->parentNode;
 
 						// If attributes are set, try to create image using native WP function, else set to false to try and parse otherwise
 						if ( isset( $id[1] ) && isset( $size[1] ) ) {
@@ -83,7 +86,14 @@ class WP_Lazy_Loaded_Images {
 							// If result is positive, image was created and will be output / replaced below
 							$new_image->loadHTML( $new_image_html );
 							$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
-							$image->parentNode->replaceChild( $new_node, $image );
+
+							// Fallback
+							$noscript = $dom->createElement( 'noscript' );
+							$noscript->appendChild( $image->cloneNode() );
+							$x++; // Double iterate x since we added an additional image to the domnodelist
+
+							$parent->insertBefore( $new_node, $image );
+							$parent->replaceChild( $noscript, $image );
 
 						} elseif ( $image->hasAttribute( 'width' ) && $image->hasAttribute( 'height' ) && $image->hasAttribute( 'src' ) ) {
 							// Image was not found (maybe external, or ID wasn't present), so check if has height, width, and src attributes (required for placeholder) to pre-fill and generate
@@ -97,9 +107,13 @@ class WP_Lazy_Loaded_Images {
 							$manual_image->setAttribute( 'src', self::create_placeholder_image( $image->getAttribute( 'width' ), $image->getAttribute( 'height' ) ) );
 							$manual_image->setAttribute( 'class', $classes );
 
+							// Fallback
+							$noscript = $dom->createElement( 'noscript' );
+							$noscript->appendChild( $image->cloneNode() );
+							$x++; // Double iterate x since we added an additional image to the domnodelist
 
-							$new_node = $dom->importNode( $manual_image );
-							$image->parentNode->replaceChild( $new_node, $image );
+							$parent->insertBefore( $manual_image, $image );
+							$parent->replaceChild( $noscript, $image );
 						}
 					}
 				}
