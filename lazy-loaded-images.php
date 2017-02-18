@@ -46,7 +46,7 @@ class WP_Lazy_Loaded_Images {
 			$dom                      = new DOMDocument(); // Post Content
 			$new_image                = new DOMDocument(); // Replacement image parser
 			$dom->strictErrorChecking = false;
-			$dom->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ) );
+			@$dom->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ) );
 
 			$images = $dom->getElementsByTagName( 'img' );
 
