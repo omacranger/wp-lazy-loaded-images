@@ -9,8 +9,13 @@ Author URI: http://twitter.com/LoganPGraham
 License: GPL2
 */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class WP_Lazy_Loaded_Images {
+
+	private $do_noscript;
 
 	/**
 	 * Lazy_Loaded_Images constructor.
@@ -26,6 +31,28 @@ class WP_Lazy_Loaded_Images {
 			add_action( 'wp_print_footer_scripts', array( $this, 'add_inline_scripts' ), 10 );
 
 			add_filter( 'the_content', array( $this, 'filter_post_content' ) );
+
+			add_action( 'wp', function () {
+				$this->do_noscript = apply_filters( 'lazy_load_enable_noscript', false );
+
+				if ( apply_filters( 'lazy_load_enable_fallback', false ) ) {
+					$this->do_noscript = true;
+
+					add_action( 'wp_head', array( $this, 'output_nojs_styles' ) );
+
+					// Add body class for 'nojs' if it doesn't exist.
+					add_filter( 'body_class', function ( $classes, $class ) {
+						if ( ! in_array( 'no-js', $classes ) ) {
+							$classes[] = 'no-js';
+						}
+
+						return $classes;
+					}, 10, 2 );
+
+					// Add script to remove class from body for individuals who have Javascript enabled
+					add_action( 'wp_footer', array( $this, 'output_nojs_script' ), 1 );
+				}
+			} );
 		}
 	}
 
@@ -67,6 +94,11 @@ class WP_Lazy_Loaded_Images {
 						$attributes[ $attribute ] = $image->getAttribute( $attribute );
 					}
 
+					// Add fallback class for wp generated images
+					if ( isset( $attributes['class'] ) ) {
+						$attributes['class'] .= ' lazy-fallback';
+					}
+
 					// Match image ID and size for dynamic image
 					preg_match( '/wp-image-([0-9]+)/', $attributes['class'], $id ); // Image ID
 					preg_match( '/size-([a-z]+)/', $attributes['class'], $size ); // Image Size
@@ -87,17 +119,20 @@ class WP_Lazy_Loaded_Images {
 							$new_image->loadHTML( $new_image_html );
 							$new_node = $dom->importNode( $new_image->getElementsByTagName( 'img' )->item( 0 ) );
 
-							// Fallback
-							$noscript = $dom->createElement( 'noscript' );
-							$noscript->appendChild( $image->cloneNode() );
-							$x++; // Double iterate x since we added an additional image to the domnodelist
+							if ( $this->do_noscript ) {
+								// Fallback
+								$noscript = $dom->createElement( 'noscript' );
+								$noscript->appendChild( $image->cloneNode() );
+								$x ++; // Double iterate x since we added an additional image to the domnodelist
 
-							$parent->insertBefore( $new_node, $image );
-							$parent->replaceChild( $noscript, $image );
+								$parent->insertBefore( $noscript, $image );
+							}
+
+							$parent->replaceChild( $new_node, $image );
 
 						} elseif ( $image->hasAttribute( 'width' ) && $image->hasAttribute( 'height' ) && $image->hasAttribute( 'src' ) ) {
 							// Image was not found (maybe external, or ID wasn't present), so check if has height, width, and src attributes (required for placeholder) to pre-fill and generate
-							$classes = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazy-load' : 'lazy-load';
+							$classes = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazy-load lazy-fallback' : 'lazy-load lazy-fallback';
 
 							// Manually create new image
 							$manual_image = $dom->createElement( 'img' );
@@ -107,13 +142,16 @@ class WP_Lazy_Loaded_Images {
 							$manual_image->setAttribute( 'src', self::create_placeholder_image( $image->getAttribute( 'width' ), $image->getAttribute( 'height' ) ) );
 							$manual_image->setAttribute( 'class', $classes );
 
-							// Fallback
-							$noscript = $dom->createElement( 'noscript' );
-							$noscript->appendChild( $image->cloneNode() );
-							$x++; // Double iterate x since we added an additional image to the domnodelist
+							if ( $this->do_noscript ) {
+								// Fallback
+								$noscript = $dom->createElement( 'noscript' );
+								$noscript->appendChild( $image->cloneNode() );
+								$x ++; // Double iterate x since we added an additional image to the domnodelist
 
-							$parent->insertBefore( $manual_image, $image );
-							$parent->replaceChild( $noscript, $image );
+								$parent->insertBefore( $noscript, $image );
+							}
+
+							$parent->replaceChild( $manual_image, $image );
 						}
 					}
 				}
@@ -219,6 +257,27 @@ class WP_Lazy_Loaded_Images {
 		imagedestroy( $image );
 
 		return 'data:image/png;base64,' . base64_encode( $string );
+	}
+
+	/**
+	 * Helper function to automatically append 'nojs' styles for those not incorporating in theme
+	 */
+	function output_nojs_styles(){
+		?><style type="text/css">.no-js .lazy-load.lazy-fallback {display: none;}</style><?php
+	}
+
+	/**
+	 * Helper function to automatically append 'nojs' removal for those not incorporating in theme
+	 */
+	function output_nojs_script() {
+		?>
+		<script type="text/javascript">
+            var body = document.getElementsByTagName('body')[0];
+            if (body != undefined) {
+                body.setAttribute('class', body.getAttribute('class').replace('no-js', ''));
+            }
+		</script>
+		<?php
 	}
 }
 
