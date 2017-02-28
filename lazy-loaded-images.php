@@ -52,6 +52,10 @@ class WP_Lazy_Loaded_Images {
 					// Add script to remove class from body for individuals who have Javascript enabled
 					add_action( 'wp_footer', array( $this, 'output_nojs_script' ), 1 );
 				}
+
+				if ( $this->do_noscript ) {
+					add_filter( 'post_thumbnail_html', array( $this, 'filter_post_thumbnail' ), 10, 5 );
+				}
 			} );
 		}
 	}
@@ -168,6 +172,33 @@ class WP_Lazy_Loaded_Images {
 	}
 
 	/**
+     * Append noscript fallback for post thumbnails if enabled
+     *
+	 * @param $html
+	 * @param $post_id
+	 * @param $post_thumbnail_id
+	 * @param $size
+	 * @param $attr
+     *
+     * @return string $html
+	 */
+	function filter_post_thumbnail( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
+		$default_attr = $lazy_attr = $attr;
+
+		// Default attribute modification
+		if ( isset( $default_attr['class'] ) ) {
+			$default_attr['class'] .= ' lazy-fallback';
+		} else {
+			$default_attr['class'] = 'lazy-fallback';
+		}
+
+		// Lazy / Fallback attributes to prevent processing
+		$lazy_attr['data-no-lazy'] = true;
+
+		return sprintf( "%s<noscript>%s</noscript>", wp_get_attachment_image( $post_thumbnail_id, $size, false, $default_attr ), wp_get_attachment_image( $post_thumbnail_id, $size, false, $lazy_attr ) );
+	}
+
+	/**
 	 * Function to add inline scripts to reduce network calls.
 	 */
 	function add_inline_scripts() {
@@ -219,7 +250,7 @@ class WP_Lazy_Loaded_Images {
 	 */
 	function modify_image_attributes( $attr, $attachment, $size ) {
 		$source = wp_prepare_attachment_for_js( $attachment->ID );
-		if ( strpos( $source['mime'], 'svg', 0 ) === false ) {
+		if ( strpos( $source['mime'], 'svg', 0 ) === false && ! isset( $attr['data-no-lazy'] ) ) {
 			// Allow passing of custom placeholder color on individual image
 			$placeholder_color = ( isset( $attr['placeholder_color'] ) ) ? $attr['placeholder_color'] : false;
 			unset( $attr['placeholder_color'] );
