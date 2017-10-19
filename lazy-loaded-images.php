@@ -27,8 +27,6 @@ class WP_Lazy_Loaded_Images {
 
 			// Enqueue Scripts / Styles
 			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-			// Inline
-			add_action( 'wp_print_footer_scripts', array( $this, 'add_inline_scripts' ), 10 );
 
 			add_filter( 'the_content', array( $this, 'filter_post_content' ) );
 
@@ -199,33 +197,12 @@ class WP_Lazy_Loaded_Images {
 	}
 
 	/**
-	 * Function to add inline scripts to reduce network calls.
-	 */
-	function add_inline_scripts() {
-		$this->print_inline_script( join( DIRECTORY_SEPARATOR, array(
-			__DIR__,
-			'assets',
-			'js',
-			'lazyload-scripts.js'
-		) ) );
-	}
-
-	/**
 	 * Enqueue styles for use on the front-end.
 	 */
 	function enqueue_scripts() {
-		if ( ! wp_style_is( 'jquery-lazyload' ) ) {
-			wp_enqueue_script( 'jquery-lazyload', $this->get_plugin_url( '/includes/js/jquery.lazyload.min.js' ), array( 'jquery' ), '1.9.7', true );
+		if ( ! wp_style_is( 'lazysizes' ) ) {
+			wp_enqueue_script( 'lazysizes', $this->get_plugin_url( '/includes/js/lazysizes.min.js' ), array(), '4.0.0', true );
 		}
-	}
-
-	/**
-	 * Helper function used to print out the javascript file minified inline. Can be dequeued using hooks if necessary.
-	 *
-	 * @param $path String File path for use with file_get_contents to return inline javascript
-	 */
-	function print_inline_script( $path ) {
-		echo sprintf( "<script type='text/javascript'>%s</script>", file_get_contents( $path ) );
 	}
 
 	/**
@@ -250,17 +227,22 @@ class WP_Lazy_Loaded_Images {
 	 */
 	function modify_image_attributes( $attr, $attachment, $size ) {
 		$source = wp_prepare_attachment_for_js( $attachment->ID );
+
 		if ( strpos( $source['mime'], 'svg', 0 ) === false && ! isset( $attr['data-no-lazy'] ) ) {
-			// Allow passing of custom placeholder color on individual image
-			$placeholder_color = ( isset( $attr['placeholder_color'] ) ) ? $attr['placeholder_color'] : false;
-			unset( $attr['placeholder_color'] );
-			
-			$attr['data-lazy'] = $attr['src'];
-			$source            = wp_get_attachment_image_src( $attachment->ID, $size );
-			$attr['src']       = $this->create_placeholder_image( $source[1], $source[2], $placeholder_color );
-			$attr['class']     = ( strpos( $attr['class'], "lazy-load" ) === false ) ? $attr['class'] . " lazy-load" : $attr['class'];
-			unset( $attr['srcset'], $attr['sizes'] ); // Unset srcset to prevent it from taking priority over lazy-loaded content
-            // TODO: Better support / fallback for srcset
+
+			$attr['data-src'] = $attr['src'];
+			$source           = wp_get_attachment_image_src( $attachment->ID, $size );
+			$attr['src']      = self::create_placeholder_image( $source[1], $source[2] );
+
+			if ( isset( $attr['srcset'] ) ) {
+				$attr['data-srcset'] = $attr['srcset'];
+				$attr['data-sizes']  = $attr['sizes'];
+				$attr['srcset']      = self::create_placeholder_image( $source[1], $source[2] );
+			}
+
+			$attr['class'] = ( strpos( $attr['class'], "lazyload" ) === false ) ? $attr['class'] . " lazyload" : $attr['class'];
+
+			unset( $attr['sizes'] );
 		}
 
 		return $attr;
@@ -271,23 +253,20 @@ class WP_Lazy_Loaded_Images {
 	 *
 	 * @param int        $width
 	 * @param int        $height
-	 * @param bool|array $color Array in RGB format to set the default background color
 	 *
 	 * @return string
 	 */
-	static function create_placeholder_image( $width = 0, $height = 0, $color = false ) {
-		if ( ! $color ) {
-			$color = apply_filters( 'placeholder_image_color', array( 255, 255, 255 ) );
-		}
+	static function create_placeholder_image( $width = 0, $height = 0 ) {
 		$image = imagecreate( $width, $height );
-		$color = imagecolorallocate( $image, $color[0], $color[1], $color[2] );
+		$color = imagecolorallocate( $image, 255, 255, 255 );
+		$color = imagecolortransparent( $image, $color );
 		imagefill( $image, 0, 0, $color );
 		ob_start();
 		imagegif( $image );
 		$string = ob_get_clean();
 		imagedestroy( $image );
 
-		return 'data:image/png;base64,' . base64_encode( $string );
+		return 'data:image/gif;base64,' . base64_encode( $string );
 	}
 
 	/**
