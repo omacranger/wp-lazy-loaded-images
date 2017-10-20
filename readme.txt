@@ -14,7 +14,7 @@ A simple plugin to enable lazy loading for all images using WordPress image func
 
 A simple plugin to enable lazy loading for all images using WordPress image functions, or embedded into posts and pages using the WordPress dashboard.
 
-The plugin works by replacing the original image source with a blank white, which can be changed via filters, image via datauri. Reducing page load speed, and saving bandwidth for both you and visitors. The plugin makes use of the fantastic [lazysizes](https://github.com/aFarkas/lazysizes) javascript library.
+The plugin works by replacing the original image source with a blank transparent gif via datauri. Reducing page load speed, network requests, and saving bandwidth for host and visitors unless they scroll where an image is in view. The plugin makes use of the fantastic [lazysizes](https://github.com/aFarkas/lazysizes) javascript library.
 
 == Installation ==
 
