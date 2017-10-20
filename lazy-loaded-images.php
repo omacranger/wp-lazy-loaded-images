@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A simple plugin to enable lazy-loading for images on WordPress.
-Version: 1.4.0
+Version: 2.0.0
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -134,7 +134,7 @@ class WP_Lazy_Loaded_Images {
 
 						} elseif ( $image->hasAttribute( 'width' ) && $image->hasAttribute( 'height' ) && $image->hasAttribute( 'src' ) ) {
 							// Image was not found (maybe external, or ID wasn't present), so check if has height, width, and src attributes (required for placeholder) to pre-fill and generate
-							$classes = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazy-load lazy-fallback' : 'lazy-load lazy-fallback';
+							$classes = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazyload lazy-fallback' : 'lazyload lazy-fallback';
 
 							// Manually create new image
 							$manual_image = $dom->createElement( 'img' );
@@ -273,7 +273,7 @@ class WP_Lazy_Loaded_Images {
 	 * Helper function to automatically append 'nojs' styles for those not incorporating in theme
 	 */
 	function output_nojs_styles(){
-		?><style type="text/css">.no-js .lazy-load.lazy-fallback {display: none;}</style><?php
+		?><style type="text/css">.no-js .lazyload.lazy-fallback {display: none;}</style><?php
 	}
 
 	/**

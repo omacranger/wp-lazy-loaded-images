@@ -3,7 +3,7 @@ Contributors: omac
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QAQ2DENKEE&lc=US&item_name=Logan%20Graham&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
-Tested up to: 4.7.2
+Tested up to: 4.8.2
 Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -14,7 +14,7 @@ A simple plugin to enable lazy loading for all images using WordPress image func
 
 A simple plugin to enable lazy loading for all images using WordPress image functions, or embedded into posts and pages using the WordPress dashboard.
 
-The plugin works by replacing the original image source with a blank white, which can be changed via filters, image via datauri. Reducing page load speed, and saving bandwidth for both you and visitors. The plugin makes use of the fantastic [Lazy Load Plugin for jQuery](https://github.com/tuupola/jquery_lazyload).
+The plugin works by replacing the original image source with a blank white, which can be changed via filters, image via datauri. Reducing page load speed, and saving bandwidth for both you and visitors. The plugin makes use of the fantastic [lazysizes](https://github.com/aFarkas/lazysizes) javascript library.
 
 == Installation ==
 
@@ -29,35 +29,20 @@ This section describes how to install the plugin and get it working.
 
 = How can I change the default placeholder color? =
 
-You can use the `placeholder_image_color` filter to supply a custom RGB array to define your own custom color globally for all placeholder images. Like so:
-
-     add_filter('placeholder_image_color', function () {
-        return array(0, 0, 0); // Return black placeholder for all images
-     });
-
-You can also change it on a per-image basis for use in theme development; The below example would give a white fallback for the outputted image only, by passing an RGB array as the value for a custom attribute of `placeholder_color` in the attr argument:
-
-     wp_get_attachment_image( $image_id, $image_size, false, array(
-        'placeholder_color' => array(
-            255,
-            255,
-            255
-        )
-     ) );
-
-The same custom attribute can be passed to a few different functions such as `the_post_thumbnail`, `get_the_post_thumbnail`, `wp_get_attachment_image`, etc. Basically any function that outputs the entire img object through WordPress and allows you to pass an attribute array.
+As of 2.0.0, Images now load as a transparent gif, which should remove the need to add custom image colors, and make it work in more situations automatically.
 
 = Fade in images as they load =
 
-By default I've included a class that's added after images are loaded to assist in theme development, and improve aesthetics. You can include the below CSS to animate images in after they are loaded in supported browsers (using opacity transition).
+With the new lazy load library, a few helper CSS classes are included by default. The full documentation can be found [here](https://github.com/aFarkas/lazysizes#css-api), but the gist of it [pulled from the github repo] is as follows:
 
-     .lazy-load {
-        opacity: 0;
-        transition: .4s opacity ease-in-out;
+     /* fade image in after load */
+     .lazyload,
+     .lazyloading {
+     	opacity: 0;
      }
-
-     .lazy-load.loaded {
-        opacity: 1;
+     .lazyloaded {
+     	opacity: 1;
+     	transition: opacity 300ms;
      }
 
 = Fallback =
@@ -70,7 +55,7 @@ To take full advantage of this, the plugin provides a fully automatic solution u
 
 Add the following CSS:
 
-     .no-js .lazy-load.lazy-fallback {
+     .no-js .lazyload.lazy-fallback {
           display: none;
      }
 
@@ -94,6 +79,10 @@ And append this snippet to your functions.php:
      }, 10, 2 );
 
 == Changelog ==
+
+= 2.0.0 =
+* Change lazy-loading library to lazysizes
+* Images & placeholder images are now generated as transparent gifs, removing the need for custom placeholder colors
 
 = 1.4.0 =
 * Added support for external images (or images that can't be found inside of WP install) as long as height, width, and src attributes are set
