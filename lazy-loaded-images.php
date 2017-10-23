@@ -140,7 +140,7 @@ class WP_Lazy_Loaded_Images {
 							$manual_image = $dom->createElement( 'img' );
 							$manual_image->setAttribute( 'width', $image->getAttribute( 'width' ) );
 							$manual_image->setAttribute( 'height', $image->getAttribute( 'height' ) );
-							$manual_image->setAttribute( 'data-lazy', $image->getAttribute( 'src' ) );
+							$manual_image->setAttribute( 'data-src', $image->getAttribute( 'src' ) );
 							$manual_image->setAttribute( 'src', self::create_placeholder_image( $image->getAttribute( 'width' ), $image->getAttribute( 'height' ) ) );
 							$manual_image->setAttribute( 'class', $classes );
 
@@ -176,12 +176,12 @@ class WP_Lazy_Loaded_Images {
 	 * @param $post_id
 	 * @param $post_thumbnail_id
 	 * @param $size
-	 * @param $attr
+	 * @param string|array $attr
      *
      * @return string $html
 	 */
 	function filter_post_thumbnail( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
-		$default_attr = $lazy_attr = $attr;
+		$default_attr = $lazy_attr = wp_parse_args( $attr );
 
 		// Default attribute modification
 		if ( isset( $default_attr['class'] ) ) {
