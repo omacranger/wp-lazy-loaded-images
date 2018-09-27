@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A simple plugin to enable lazy-loading for images on WordPress.
-Version: 2.0.1
+Version: 2.0.2
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -75,7 +75,7 @@ class WP_Lazy_Loaded_Images {
 			$dom                      = new DOMDocument(); // Post Content
 			$new_image                = new DOMDocument(); // Replacement image parser
 			$dom->strictErrorChecking = false;
-			@$dom->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+			@$dom->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ), LIBXML_HTML_NODEFDTD );
 
 			$images = $dom->getElementsByTagName( 'img' );
 
@@ -159,7 +159,9 @@ class WP_Lazy_Loaded_Images {
 				}
 			}
 
-			return $dom->saveHTML();
+			$html = trim( $dom->saveHTML() );
+
+			return substr( $html, 12, - 14 ); // Strip out 'html' and 'body' tags that are automatically appended.
 		} catch ( \Exception $e ) {
 			if ( apply_filters( 'lazy_load_log_errors', false ) ) { // Set to false by default to prevent excess error logging if used on high traffic site
 				error_log( $e->getMessage() );
