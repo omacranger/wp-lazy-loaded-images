@@ -86,6 +86,12 @@ class WP_Lazy_Loaded_Images {
 				for( $x = 0; $x < $images->length; $x++ ) {
 					$image = $images->item($x);
 
+					// Check to see if image has already been filtered through - prevent duplicates for shortcode & post content blocks
+					$data_src = $image->getAttribute( 'data-src' );
+					if ( ! empty( $data_src ) ) {
+						continue;
+					}
+
 					$supported_attributes = apply_filters( 'lazy_load_image_attributes', array(
 						'class',
 						'alt',
