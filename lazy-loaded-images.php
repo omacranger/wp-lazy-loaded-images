@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A simple plugin to enable lazy-loading for images on WordPress.
-Version: 2.0.3
+Version: 2.0.4
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -92,10 +92,13 @@ class WP_Lazy_Loaded_Images {
 						continue;
 					}
 
+					// TODO: Automatically load all attributes instead of selectively
 					$supported_attributes = apply_filters( 'lazy_load_image_attributes', array(
 						'class',
 						'alt',
-						'title'
+						'title',
+                        'style',
+                        'id'
 					) );
 					$attributes           = array();
 
@@ -141,7 +144,7 @@ class WP_Lazy_Loaded_Images {
 
 						} elseif ( $image->hasAttribute( 'width' ) && $image->hasAttribute( 'height' ) && $image->hasAttribute( 'src' ) ) {
 							// Image was not found (maybe external, or ID wasn't present), so check if has height, width, and src attributes (required for placeholder) to pre-fill and generate
-							$classes = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazyload lazy-fallback' : 'lazyload lazy-fallback';
+							$attributes['class'] = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazyload lazy-fallback' : 'lazyload lazy-fallback';
 
 							// Manually create new image
 							$manual_image = $dom->createElement( 'img' );
@@ -149,7 +152,10 @@ class WP_Lazy_Loaded_Images {
 							$manual_image->setAttribute( 'height', $image->getAttribute( 'height' ) );
 							$manual_image->setAttribute( 'data-src', $image->getAttribute( 'src' ) );
 							$manual_image->setAttribute( 'src', self::create_placeholder_image( $image->getAttribute( 'width' ), $image->getAttribute( 'height' ) ) );
-							$manual_image->setAttribute( 'class', $classes );
+
+							foreach ( $attributes as $key => $attribute ) {
+								$manual_image->setAttribute( $key, $attribute );
+                            }
 
 							if ( $this->do_noscript ) {
 								// Fallback
