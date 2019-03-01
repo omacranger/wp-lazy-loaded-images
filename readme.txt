@@ -3,8 +3,8 @@ Contributors: omac
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QAQ2DENKEE&lc=US&item_name=Logan%20Graham&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
-Tested up to: 4.8.2
-Stable tag: 2.0.0
+Tested up to: 5.1.0
+Stable tag: 2.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,11 @@ And append this snippet to your functions.php:
      }, 10, 2 );
 
 == Changelog ==
+
+= 2.0.1 - 2.0.5 =
+* Fix appending of HTML & BODY tags from generated content
+* Update lazysizes library
+* Migrate all attributes previously on image to newly generated one(s)
 
 = 2.0.0 =
 * Change lazy-loading library to lazysizes

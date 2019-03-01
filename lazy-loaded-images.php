@@ -3,7 +3,7 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A simple plugin to enable lazy-loading for images on WordPress.
-Version: 2.0.4
+Version: 2.0.5
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
@@ -92,23 +92,13 @@ class WP_Lazy_Loaded_Images {
 						continue;
 					}
 
-					// TODO: Automatically load all attributes instead of selectively
-					$supported_attributes = apply_filters( 'lazy_load_image_attributes', array(
-						'class',
-						'alt',
-						'title',
-                        'style',
-                        'id'
-					) );
-					$attributes           = array();
+					// Automatically load all attributes
+					$attributes = array();
 
-					foreach ( $supported_attributes as $attribute ) {
-						$attributes[ $attribute ] = $image->getAttribute( $attribute );
-					}
-
-					// Add fallback class for wp generated images
-					if ( isset( $attributes['class'] ) ) {
-						$attributes['class'] .= ' lazy-fallback';
+					if ( $image->hasAttributes() ) {
+						foreach ( $image->attributes as $attr => $value ) {
+							$attributes[ $attr ] = $value->value;
+						}
 					}
 
 					// Match image ID and size for dynamic image
@@ -142,20 +132,21 @@ class WP_Lazy_Loaded_Images {
 
 							$parent->replaceChild( $new_node, $image );
 
-						} elseif ( $image->hasAttribute( 'width' ) && $image->hasAttribute( 'height' ) && $image->hasAttribute( 'src' ) ) {
+						} elseif ( isset( $attributes['width'] ) && isset( $attributes['height'] ) && isset( $attributes['src'] ) ) {
 							// Image was not found (maybe external, or ID wasn't present), so check if has height, width, and src attributes (required for placeholder) to pre-fill and generate
-							$attributes['class'] = ( $image->hasAttribute( 'class' ) ) ? $image->getAttribute( 'class' ) . ' lazyload lazy-fallback' : 'lazyload lazy-fallback';
+							$attributes['class'] = ( isset( $attributes['class'] ) ) ? $attributes['class'] . ' lazyload lazy-fallback' : 'lazyload lazy-fallback';
 
 							// Manually create new image
 							$manual_image = $dom->createElement( 'img' );
-							$manual_image->setAttribute( 'width', $image->getAttribute( 'width' ) );
-							$manual_image->setAttribute( 'height', $image->getAttribute( 'height' ) );
-							$manual_image->setAttribute( 'data-src', $image->getAttribute( 'src' ) );
-							$manual_image->setAttribute( 'src', self::create_placeholder_image( $image->getAttribute( 'width' ), $image->getAttribute( 'height' ) ) );
 
+							// Bring all previous attributes
 							foreach ( $attributes as $key => $attribute ) {
 								$manual_image->setAttribute( $key, $attribute );
-                            }
+							}
+
+							// Overwrite source & data source for lazy loading
+							$manual_image->setAttribute( 'data-src', $attributes['src'] );
+							$manual_image->setAttribute( 'src', self::create_placeholder_image( $attributes['width'], $attributes['height'] ) );
 
 							if ( $this->do_noscript ) {
 								// Fallback
