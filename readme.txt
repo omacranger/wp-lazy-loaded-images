@@ -1,12 +1,13 @@
-=== Plugin Name ===
+=== WP Lazy Loaded Images ===
 Contributors: omac
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=B38QAQ2DENKEE&lc=US&item_name=Logan%20Graham&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: Lazy, Loading, Images, Plugin
 Requires at least: 2.8.0
 Tested up to: 5.1.0
-Stable tag: 2.0.5
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Requires PHP: 5.4
 
 A simple plugin to enable lazy loading for all images using WordPress image functions.
 
@@ -20,9 +21,10 @@ The plugin works by replacing the original image source with a blank transparent
 
 This section describes how to install the plugin and get it working.
 
-1. Upload the plugin files to the `/wp-content/plugins/wp-lazy-loaded-images` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress
-3. That's it! It should automatically replace images used inside of posts / pages (where passed through properly in themes), plugins, and more.
+1. Verify PHP extension requirements from the FAQ section
+2. Upload the plugin files to the `/wp-content/plugins/wp-lazy-loaded-images` directory, or install the plugin through the WordPress plugins screen directly.
+3. Activate the plugin through the 'Plugins' screen in WordPress
+4. That's it! It should automatically replace images used inside of posts / pages (where passed through properly in themes), plugins, and more.
 
 
 == Frequently Asked Questions ==
@@ -78,7 +80,19 @@ And append this snippet to your functions.php:
         return $classes;
      }, 10, 2 );
 
+= Requirements =
+
+The plugin requires the below PHP Extensions in order to properly function: 
+
+* `gd` - To create placeholder images
+* `xml` - To properly parse HTML inside post contents and enable automatic creation of lazy loaded images
+* `mbstring` - To handle encoding of HTML & Unicode characters while parsing
+
 == Changelog ==
+
+= 2.0.6 =
+* Fix PHP warnings from WP generating duplicate `width` and `height` attributes
+* Add admin notice if required PHP Extensions are not installed / enabled
 
 = 2.0.1 - 2.0.5 =
 * Fix appending of HTML & BODY tags from generated content

@@ -3,10 +3,11 @@
 Plugin Name: WP Lazy Loaded Images
 Plugin URI: https://wordpress.org/plugins/wp-lazy-loaded-images/
 Description: A simple plugin to enable lazy-loading for images on WordPress.
-Version: 2.0.5
+Version: 2.0.6
 Author: Logan Graham
 Author URI: http://twitter.com/LoganPGraham
 License: GPL2
+Text Domain: wp-lazy-loaded-images
 */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,42 +22,18 @@ class WP_Lazy_Loaded_Images {
 	 * Lazy_Loaded_Images constructor.
 	 */
 	public function __construct() {
-		if ( ! is_admin() ) {
+		if ( ! is_admin() && $this->has_required_extensions() ) {
 			// Front-End scripts
-			add_action( 'wp_get_attachment_image_attributes', array( $this, 'modify_image_attributes' ), 10, 3 );
+			add_filter( 'wp_get_attachment_image_attributes', array( $this, 'modify_image_attributes' ), 10, 3 );
 
 			// Enqueue Scripts / Styles
 			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
 			add_filter( 'the_content', array( $this, 'filter_post_content' ) );
 			add_filter( 'do_shortcode_tag', array( $this, 'filter_post_content' ) );
-
-			add_action( 'wp', function () {
-				$this->do_noscript = apply_filters( 'lazy_load_enable_noscript', false );
-
-				if ( apply_filters( 'lazy_load_enable_fallback', false ) ) {
-					$this->do_noscript = true;
-
-					add_action( 'wp_head', array( $this, 'output_nojs_styles' ) );
-
-					// Add body class for 'nojs' if it doesn't exist.
-					add_filter( 'body_class', function ( $classes, $class ) {
-						if ( ! in_array( 'no-js', $classes ) ) {
-							$classes[] = 'no-js';
-						}
-
-						return $classes;
-					}, 10, 2 );
-
-					// Add script to remove class from body for individuals who have Javascript enabled
-					add_action( 'wp_footer', array( $this, 'output_nojs_script' ), 1 );
-				}
-
-				if ( $this->do_noscript ) {
-					add_filter( 'post_thumbnail_html', array( $this, 'filter_post_thumbnail' ), 10, 5 );
-				}
-			} );
-		}
+		} else {
+			add_action( 'admin_init', array( $this, 'maybe_add_admin_notice' ) );
+        }
 	}
 
 	/**
@@ -111,6 +88,9 @@ class WP_Lazy_Loaded_Images {
 
 						// If attributes are set, try to create image using native WP function, else set to false to try and parse otherwise
 						if ( isset( $id[1] ) && isset( $size[1] ) ) {
+							// Unset variables that will be generated dynamically / hard-coded by wp_get_attachment_image
+							unset( $attributes['width'], $attributes['height'], $attributes['src'] );
+
 							$new_image_html = wp_get_attachment_image( $id[1], $size[1], false, $attributes );
 						} else {
 							$new_image_html = false;
@@ -246,7 +226,7 @@ class WP_Lazy_Loaded_Images {
 				$attr['srcset']      = self::create_placeholder_image( $source[1], $source[2] );
 			}
 
-			$attr['class'] = ( strpos( $attr['class'], "lazyload" ) === false ) ? $attr['class'] . " lazyload" : $attr['class'];
+			$attr['class'] = ( strpos( $attr['class'], "lazyload" ) === false ) ? $attr['class'] . " lazyload lazy-fallback" : $attr['class'];
 
 			unset( $attr['sizes'] );
 		}
@@ -276,6 +256,35 @@ class WP_Lazy_Loaded_Images {
 	}
 
 	/**
+	 * Handles output of noscript fallback if enabled.
+	 */
+	function maybe_do_noscript(){
+        $this->do_noscript = apply_filters( 'lazy_load_enable_noscript', true );
+
+        if ( apply_filters( 'lazy_load_enable_fallback', false ) ) {
+            $this->do_noscript = true;
+
+            add_action( 'wp_head', array( $this, 'output_nojs_styles' ) );
+
+            // Add body class for 'nojs' if it doesn't exist.
+            add_filter( 'body_class', function ( $classes, $class ) {
+                if ( ! in_array( 'no-js', $classes ) ) {
+                    $classes[] = 'no-js';
+                }
+
+                return $classes;
+            }, 10, 2 );
+
+            // Add script to remove class from body for individuals who have Javascript enabled
+            add_action( 'wp_footer', array( $this, 'output_nojs_script' ), 1 );
+        }
+
+        if ( $this->do_noscript ) {
+            add_filter( 'post_thumbnail_html', array( $this, 'filter_post_thumbnail' ), 10, 5 );
+        }
+    }
+
+	/**
 	 * Helper function to automatically append 'nojs' styles for those not incorporating in theme
 	 */
 	function output_nojs_styles(){
@@ -294,6 +303,24 @@ class WP_Lazy_Loaded_Images {
             }
 		</script>
 		<?php
+	}
+
+	/**
+	 * Static function to check if required PHP extensions are installed & enabled for correct functionality.
+	 */
+	function has_required_extensions() {
+		return ( extension_loaded( 'gd' ) && extension_loaded( 'mbstring' ) && extension_loaded( 'xml' ) );
+	}
+
+	/**
+	 * Add notice to dashboard if all requirements are not met.
+	 */
+	function maybe_add_admin_notice() {
+		if ( ! $this->has_required_extensions() ) {
+			add_action( 'admin_notices', function () {
+				printf( '<div class="notice notice-error"><p>%s</p></div>', __( 'WP Lazy Loaded Images: Unable to load required PHP extensions: <code>mbstring</code>, <code>gd</code> & <code>xml</code>. Please enable extensions or ask web host to enable for proper functionality.', 'wp-lazy-loaded-images' ) );
+			} );
+		}
 	}
 }
 
