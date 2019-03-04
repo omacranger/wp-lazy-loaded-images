@@ -31,9 +31,11 @@ class WP_Lazy_Loaded_Images {
 
 			add_filter( 'the_content', array( $this, 'filter_post_content' ) );
 			add_filter( 'do_shortcode_tag', array( $this, 'filter_post_content' ) );
+
+			add_action( 'wp', array( $this, 'maybe_do_noscript' ) );
 		} else {
 			add_action( 'admin_init', array( $this, 'maybe_add_admin_notice' ) );
-        }
+		}
 	}
 
 	/**
@@ -259,7 +261,7 @@ class WP_Lazy_Loaded_Images {
 	 * Handles output of noscript fallback if enabled.
 	 */
 	function maybe_do_noscript(){
-        $this->do_noscript = apply_filters( 'lazy_load_enable_noscript', true );
+        $this->do_noscript = apply_filters( 'lazy_load_enable_noscript', false );
 
         if ( apply_filters( 'lazy_load_enable_fallback', false ) ) {
             $this->do_noscript = true;
