@@ -220,12 +220,13 @@ class WP_Lazy_Loaded_Images {
 
 			$attr['data-src'] = $attr['src'];
 			$source           = wp_get_attachment_image_src( $attachment->ID, $size );
-			$attr['src']      = self::create_placeholder_image( $source[1], $source[2] );
+			$placeholder_image = self::create_placeholder_image( $source[1], $source[2] );
+			$attr['src']       = $placeholder_image;
 
 			if ( isset( $attr['srcset'] ) ) {
 				$attr['data-srcset'] = $attr['srcset'];
 				$attr['data-sizes']  = $attr['sizes'];
-				$attr['srcset']      = self::create_placeholder_image( $source[1], $source[2] );
+				$attr['srcset']      = $placeholder_image;
 			}
 
 			$attr['class'] = ( strpos( $attr['class'], "lazyload" ) === false ) ? $attr['class'] . " lazyload lazy-fallback" : $attr['class'];
@@ -239,8 +240,8 @@ class WP_Lazy_Loaded_Images {
 	/**
 	 * Function to create placeholder image (data-uri) for existing attachment.
 	 *
-	 * @param int        $width
-	 * @param int        $height
+	 * @param int $width
+	 * @param int $height
 	 *
 	 * @return string
 	 */
